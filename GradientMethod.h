@@ -7,35 +7,24 @@
 
 #include <iostream>
 #include <vector>
+#include <functional>
+#include "Method.h"
 
-using FuncPointer = double(*)(double);
-
-class GradientMethod {
+class GradientMethod: public Method {
 private:
-    double xBegin, eps, lambda;
-    unsigned iterationsNumber;
-    std::vector<double> xVector;
-public:
-    double getXBegin() const;
-    void setXBegin(double xBegin);
-    double getEps() const;
-    void setEps(double eps);
-    double getLambda() const;
-    void setLambda(double lambda);
-    const std::vector<double> &getXVector() const;
-    unsigned getIterationsNumber() const;
-    const FuncPointer& getFunc() const;
-    void setFunc(const FuncPointer& func);
-private:
-    FuncPointer func;
+    double lambda;
     double gradFunc(double x);
 public:
-    GradientMethod(double xBegin, double lambda, double eps, double (*func) (double x));
-    void init(double xBegin, double lambda, double eps, double (*func) (double x));
-    std::vector<double> solve();
-    void reset();
-    double getXMin() const;
-};
+    GradientMethod(double xBegin, double lambda, double eps, FuncType&& func);
 
+    double solve() override;
+
+    double getLambda() const;
+    void setLambda(double lambda);
+
+    void init(double xBegin, double lambda, double eps, double (*func) (double x));
+    void reset();
+
+};
 
 #endif //METHODSOFOPTIMIZATION_GRADIENTMETHOD_H

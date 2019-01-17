@@ -23,12 +23,14 @@ public:
     Gnuplot();
     ~Gnuplot();
 
+    void setTitle(const char * title);
     void setxLabel(const char * xLabel);
     void setyLabel(const char * yLabel);
     void setGrid(bool f);
     void setxRange(double left, double right);
     void setyRange(double left, double right);
     void setLineStyle(int number, Color color, unsigned lineType, double lineWidth, int pointType, double pointSize);
+    void setArrow(double x);
     void operator()(const std::string & command);
 };
 
@@ -57,6 +59,10 @@ Gnuplot::~Gnuplot() {
 void Gnuplot::operator()(const std::string &command) {
     fprintf(gnuplotPipe, "%s\n", command.c_str());
     fflush(gnuplotPipe);
+}
+
+void Gnuplot::setTitle(const char * title) {
+    fprintf(gnuplotPipe, "set title \"%s\"\n", title);
 }
 
 void Gnuplot::setxLabel(const char *xLabel) {
@@ -101,5 +107,11 @@ void Gnuplot::setLineStyle(const int number, Color color, unsigned lineType, dou
     }
     fprintf(gnuplotPipe, "\n");
 }
+
+void Gnuplot::setArrow(double x) {
+    fprintf(gnuplotPipe, "set arrow from %f, graph 0 to %f, graph 1 nohead\n", x, x);
+}
+
+
 
 #endif //METHODSOFOPTIMIZATION_GNUPLOT_H
