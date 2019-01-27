@@ -7,6 +7,16 @@
 #include "BarrierFunctionMethod.h"
 #include "GradientMethod.h"
 
+class endl;
+
+class cerr;
+
+class fabs;
+
+class vector;
+
+class move;
+
 BarrierFunctionMethod::BarrierFunctionMethod(double xBegin, double rkBegin, double eps, double C, FuncType&& func, double bound, bool isLeft = true):
     Method(std::move(func), xBegin, eps), rkBegin(rkBegin), rk(rkBegin), C(C), bound(bound), isLeft(isLeft) {}
 
@@ -27,8 +37,7 @@ void BarrierFunctionMethod::setRk(double rk) {
 }
 
 const FuncType & BarrierFunctionMethod::getF() const {
-
-
+    return F;
 }
 
 double BarrierFunctionMethod::F(double x) {

@@ -20,7 +20,7 @@ private:
 public:
     BarrierFunctionMethod(double xBegin, double rkBegin, double eps, double C, FuncType&& func, double bound, bool isLeft);
 
-    double solve() override;
+    Point solve() override;
 
     double getRkBegin() const;
     double getC() const;

@@ -8,31 +8,32 @@
 #include <iostream>
 #include <vector>
 #include <functional>
+#include "Point.h"
 
-// Новый тип - функтор для функций типа: double (double)
-using FuncType = std::function<double (double)>;
+// Новый тип - функтор для функций типа: double (Point)
+using FuncType = std::function<double (Point)>;
 
 // Определение класса "Метод"
 class Method {
 protected:
     FuncType func;      // указатель на оптимизируемую функцию
-    double xBegin;      // начальное приближение
+    Point pBegin;      // начальное приближение по X и Y
     double eps;         // необходимая точность
-    unsigned iterationsNumber;      // произведённое количество итераций при поиске минимума
-    std::vector<double> xVector;    // вектор шагов по X
-    double result;      // полученный xmin
+    int iterationsNumber;      // произведённое количество итераций при поиске минимума
+    std::vector<Point> stepVec;    // вектор шагов по X и Y
+    Point result;      // полученный Xmin, Ymin
 
 public:
     // Конструкторы
-    Method(): func(nullptr), xBegin(0.0f), eps(0.0f), iterationsNumber(0), result(0.0f) {}
-    Method(FuncType&& f, double xBegin, double eps): func(f), xBegin(xBegin), eps(eps), iterationsNumber(0), result(0.0f) {}
+    Method(): func(nullptr), pBegin(0.0f, 0.0f), eps(0.0f), iterationsNumber(0), result(0.0f) {}
+    Method(FuncType&& f, Point pBegin, double eps): func(f), pBegin(pBegin), eps(eps), iterationsNumber(0), result(0.0f) {}
 
     // Решатель задачи оптимизации
-    virtual double solve() = 0;
+    virtual Point solve() = 0;
 
     // Геттеры и сеттеры
-    double getXBegin() const;
-    void setXBegin(double xBegin);
+    Point getPBegin() const;
+    void setPBegin(Point pBegin);
 
     double getEps() const;
     void setEps(double eps);
@@ -40,11 +41,11 @@ public:
     const FuncType & getFunc() const;
     void setFunc(const FuncType &func);
 
-    const std::vector<double> & getXVector() const;
+    const std::vector<Point> & getStepVec() const;
 
     unsigned getIterationsNumber() const;
 
-    double getResult() const;
+    Point getResult() const;
 };
 
 #endif //METHODSOFOPTIMIZATION_METHOD_H

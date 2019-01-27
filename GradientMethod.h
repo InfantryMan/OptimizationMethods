@@ -13,16 +13,17 @@
 class GradientMethod: public Method {
 private:
     double lambda;
-    double gradFunc(double x);
+    Point gradFunc(Point p);
 public:
-    GradientMethod(double xBegin, double lambda, double eps, FuncType&& func);
+    GradientMethod(double xBegin, double yBegin, double lambda, double eps, FuncType&& func);
+    GradientMethod(Point pBegin, double lambda, double eps, FuncType&& func);
 
-    double solve() override;
+    Point solve() override;
 
     double getLambda() const;
     void setLambda(double lambda);
 
-    void init(double xBegin, double lambda, double eps, double (*func) (double x));
+    void init(Point pBegin, double lambda, double eps, double (*func) (Point p));
     void reset();
 
 };

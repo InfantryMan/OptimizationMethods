@@ -4,12 +4,12 @@
 
 #include "Method.h"
 
-double Method::getXBegin() const {
-    return this->xBegin;
+Point Method::getPBegin() const {
+    return this->pBegin;
 }
 
-void Method::setXBegin(double xBegin) {
-    this->xBegin = xBegin;
+void Method::setPBegin(Point pBegin) {
+    this->pBegin = pBegin;
 }
 
 double Method::getEps() const {
@@ -28,14 +28,14 @@ void Method::setFunc(const FuncType &func) {
     this->func = func;
 }
 
-const std::vector<double> & Method::getXVector() const {
-    return xVector;
+const std::vector<Point> & Method::getStepVec() const {
+    return stepVec;
 }
 
 unsigned Method::getIterationsNumber() const {
     return iterationsNumber;
 }
 
-double Method::getResult() const {
+Point Method::getResult() const {
     return result;
 }

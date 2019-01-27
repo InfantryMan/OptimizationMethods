@@ -10,7 +10,7 @@
 #include "Color.h"
 
 #ifdef WIN32
-    #define GNUPLOT_NAME "pgnuplot -persist"
+    #define GNUPLOT_NAME "gnuplot -persist"
 #else
     #define GNUPLOT_NAME "gnuplot -persist"
 #endif
