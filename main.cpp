@@ -4,50 +4,96 @@
 #include "BarrierFunctionMethod.h"
 #include "Point.h"
 
-double f(Point p) {
-    return p.x * p.x + p.y;
+// Функция сферы
+// Min: f(0, 0) = 0
+double sphereFunc(Point p) {
+    return p.x * p.x + p.y * p.y;
 }
 
-namespace Grad {
-    const Point pBegin(-10.0f, -10.0f);
-    const double lambda = 10, eps = 1e-3;
-    const char *fileName = "gradient_result.txt";
+// Функция Била
+// Min: f(3, 0.5) = 0
+double bilFunc(Point p) {
+    return pow(1.5 - p.x + p.x * p.y, 2) + pow(2.25 - p.x + p.x * p.y * p.y, 2) + pow(2.625 - p.x + p.x * pow(p.y, 3), 2);
 }
+
+// Функция Розенброка
+// Min: f(3, 0.5) = 0
+//double f(Point p) {
+//    return 100 * pow(p.y - p.x * p.x, 2) + pow(p.x - 1, 2);
+//}
+
+//double f(Point p) {
+//    return 4 * pow(p.x - 5, 2) + (p.y - 6);
+//}
 
 namespace Barr {
+    struct Settings {
+        Point pBegin;
+        double rk, C, eps, bound
+    };
+
     const Point pBegin(-10.0f, -10.0f);
     double rk = 10.0f, C = 2.0f, eps = 1e-2, bound = 1.0f;
     bool isLeft = true;
     const char *fileName = "barrier_result.txt";
 }
 
-void printMethodResultToTerminal(const Method *method, const std::string & methodName, const std::string & funcAsString, const std::string & description = "", bool verbosity = false) {
+namespace Grad {
+    struct Settings {
+        Point pBegin;
+        double eps;
+        std::string fileName;
+
+        Settings(Point pBegin, double eps, std::string fileName): pBegin(pBegin), eps(eps), fileName(fileName) {}
+    }
+    sphereSettings(Point(-81245.43f, 0.001f), 1e-3, "gradient_sphere.txt"),
+    bilSettings(Point(3.5, 1.0f), 1e-3, "gradient_bil.txt")    ;
+
+    void sphereFuncOpt(GradientMethod &gradientMethod) {
+        gradientMethod.setEps(sphereSettings.eps);
+        gradientMethod.setPBegin(sphereSettings.pBegin);
+        gradientMethod.setFunc(sphereFunc);
+
+        gradientMethod.solve();
+    }
+
+    void bilFuncOpt(GradientMethod &gradientMethod) {
+        gradientMethod.setEps(bilSettings.eps);
+        gradientMethod.setPBegin(bilSettings.pBegin);
+        gradientMethod.setFunc(bilFunc);
+
+        gradientMethod.solve();
+    }
+
+}
+
+void printMethodResultToTerminal(const Method &method, const std::string & methodName, const std::string & funcAsString, const std::string & description = "", bool verbosity = false) {
     std::cout << "\t\t" << methodName << " method for " << funcAsString << std::endl;
-    std::cout << "xBegin = " << method->getPBegin().x << " " << "yBegin = " << method->getPBegin().y << "; eps = " << method->getEps() << std::endl;
+    std::cout << "xBegin = " << method.getPBegin().x << " " << "yBegin = " << method.getPBegin().y << "; eps = " << method.getEps() << std::endl;
     std::cout << description << std::endl;
     if (verbosity) {
         Point p;
-        std::cout << "i\tx\ty\tf" << std::endl;
-        for (unsigned i = 0; i < method->getStepVec().size(); i++) {
-            p = Point(method->getStepVec()[i].x, method->getStepVec()[i].y);
-            std::cout << i << "\t" << method->getStepVec()[i].x << "\t" << method->getStepVec()[i].y << "\t" << f(p) << std::endl;
+        std::cout << "i\tx\t\ty\t\tf" << std::endl;
+        for (unsigned i = 0; i < method.getStepVec().size(); i++) {
+            p = Point(method.getStepVec()[i].x, method.getStepVec()[i].y);
+            std::cout << i << "\t" << std::scientific << method.getStepVec()[i].x << "\t" << method.getStepVec()[i].y << "\t" << method.getFunc()(p) << std::endl;
         }
     }
-    std::cout << "Number of iterations = " << method->getIterationsNumber() << std::endl;
-    std::cout << "xMin = " << method->getResult().x << " " << "yMin = " << method->getResult().y << std::endl;
-    std::cout << "f(xMin, yMin) = " << f(method->getResult()) << std::endl;
+    std::cout << "Number of iterations = " << method.getIterationsNumber() << std::endl;
+    std::cout << "xMin = " << method.getResult().x << " " << "yMin = " << method.getResult().y << std::endl;
+    std::cout << "f(xMin, yMin) = " << method.getFunc()(method.getResult()) << std::endl;
 }
 
-void printMethodResultToFile(const Method *method, const char * fileName) {
-    FILE *fp = fopen(fileName, "w");
+void printMethodResultToFile(const Method &method, const std::string& fileName) {
+    FILE *fp = fopen(fileName.c_str(), "w");
 
     if (fp == nullptr) {
         std::cerr << "Can not open file " << fileName << std::endl;
         return;
     }
 
-    const std::vector<Point> & result = method->getStepVec();
-    const FuncType & f = method->getFunc();
+    const std::vector<Point> & result = method.getStepVec();
+    const FuncType & f = method.getFunc();
 
     for (Point point : result) {
         fprintf(fp, "%lf %lf %lf\n", point.x, point.y, f(point));
@@ -56,26 +102,42 @@ void printMethodResultToFile(const Method *method, const char * fileName) {
     fclose(fp);
 }
 
-
 int main() {
-    auto *gradientMethod = new GradientMethod(Grad::pBegin, Grad::lambda, Grad::eps, f);
-    gradientMethod->solve();
-    const std::string gradDescr = "lambda = " + std::to_string(Grad::lambda);
+    // Градиентный метод
+    GradientMethod gradientMethod;
 
-    printMethodResultToTerminal(gradientMethod, "Gradient", "z = x * x + y * y", gradDescr, true);
-    printMethodResultToFile(gradientMethod, Grad::fileName);
-
+    // Инициализация параметров gnuplot
     Gnuplot plotGradient;
     plotGradient.setTitle("Gradient method");
     plotGradient.setxLabel("x");
     plotGradient.setyLabel("y");
     plotGradient.setGrid(true);
-    plotGradient.setxRange(Grad::pBegin.x, -Grad::pBegin.x);
-    plotGradient.setyRange(Grad::pBegin.y, -Grad::pBegin.y);
-
     plotGradient.setLineStyle(1, Color::GREEN, 1, 1.5);
     plotGradient.setLineStyle(2, Color::RED, 1, 1.5, 2, 1.0);
-    plotGradient("splot x * x + y * y with lines linestyle 1, 'gradient_result.txt' with linespoints linestyle 2");
+
+//    // Градиентный метод для функции сферы
+//    Grad::sphereFuncOpt(gradientMethod);
+//    printMethodResultToTerminal(gradientMethod, "Gradient", "z = x * x + y * y", "", true);
+//    printMethodResultToFile(gradientMethod, Grad::sphereSettings.fileName);
+//    gradientMethod.reset();
+////    plotGradient.setxRange(Grad::sphereSettings.pBegin.x + 5, -Grad::sphereSettings.pBegin.x - 5);
+////    plotGradient.setyRange(Grad::sphereSettings.pBegin.y + 5, -Grad::sphereSettings.pBegin.y - 5);
+//    plotGradient.setxRange(Grad::sphereSettings.pBegin.x, -Grad::sphereSettings.pBegin.x);
+//    plotGradient.setyRange(Grad::sphereSettings.pBegin.y, -Grad::sphereSettings.pBegin.y);
+//    plotGradient("splot x * x + y * y with lines linestyle 1, 'gradient_sphere.txt' with linespoints linestyle 2");
+
+
+    // Градиентный метод для функции Била
+    Grad::bilFuncOpt(gradientMethod);
+    printMethodResultToTerminal(gradientMethod, "Gradient", "Bill Function", "", true);
+    printMethodResultToFile(gradientMethod, Grad::bilSettings.fileName);
+
+
+    plotGradient.setxRange(Grad::bilSettings.pBegin.x, -Grad::bilSettings.pBegin.x);
+    plotGradient.setyRange(Grad::bilSettings.pBegin.y, -Grad::bilSettings.pBegin.y);
+
+
+    plotGradient("splot (1.5-x+x*y)**2+(2.25-x+x*y*y)**2+(2.625-x+x*y*y*y)**2 with lines linestyle 1, 'gradient_bil.txt' with linespoints linestyle 2");
 
 //    auto *barrierFunctionMethod = new BarrierFunctionMethod(Barr::xBegin, Barr::rk, Barr::eps, Barr::C, f, Barr::bound, Barr::isLeft);
 //    barrierFunctionMethod->solve();
@@ -127,7 +189,7 @@ int main() {
 //
 //    }
 
-    delete(gradientMethod);
+//    delete(gradientMethod);
 //    delete(barrierFunctionMethod);
     return 0;
 }
