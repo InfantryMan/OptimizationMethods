@@ -96,6 +96,8 @@ void Gnuplot::setLineStyle(const int number, Color color, unsigned lineType, dou
         break;
         case Color::GREEN: colorString = "#00f0ad";
         break;
+        case Color::BLUE: colorString = "#00538A";
+        break;
         default: colorString = "#00f0ad";
     }
     fprintf(gnuplotPipe, "set style line %d linecolor rgb \'%s\' linetype %d linewidth %lf ", number, colorString.c_str(), lineType, lineWidth);

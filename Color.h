@@ -8,6 +8,7 @@
 enum Color {
     RED,
     GREEN,
+    BLUE,
 };
 
 #endif //METHODSOFOPTIMIZATION_COLOR_H

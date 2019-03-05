@@ -13,20 +13,35 @@ private:
     std::vector<double> rkVector;
     double rkBegin, rk, C, bound;
     bool isLeft;
-    double F(double x);
-    double P(double x);
-    bool isInsideBound(double x);
-    bool isMethodEnd(double x);
+    FuncType F;
+    FuncType P;
+
+    FuncType boundFunc;
+
+    bool isInsideBound(Point p);
+    bool isMethodEnd(Point p);
 public:
-    BarrierFunctionMethod(double xBegin, double rkBegin, double eps, double C, FuncType&& func, double bound, bool isLeft);
+    BarrierFunctionMethod();
+    BarrierFunctionMethod(Point pBegin, double rkBegin, double eps, double C, FuncType&& func, double bound, bool isLeft);
 
     Point solve() override;
 
     double getRkBegin() const;
+    void setC(double C);
     double getC() const;
+    void setBound(double bound);
+    void setIsLeft(bool isLeft);
     const std::vector<double> & getRkVector() const;
     void setRk(double rk);
     const FuncType & getF() const;
+
+    void setBoundFunc(const FuncType &f);
+
+//    const FuncType & getF() const;
+//    void setF(const FuncType &f);
+//
+//    const FuncType & getP() const;
+//    void setP(const FuncType &f);
 };
 
 #endif //METHODSOFOPTIMIZATION_BARRIERFUNCTIONMETHOD_H

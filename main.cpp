@@ -18,9 +18,14 @@ double bilFunc(Point p) {
 
 // Функция Розенброка
 // Min: f(3, 0.5) = 0
-//double f(Point p) {
-//    return 100 * pow(p.y - p.x * p.x, 2) + pow(p.x - 1, 2);
-//}
+double rozenbrokFunc(Point p) {
+    return 100 * pow(p.y - p.x * p.x, 2) + pow(p.x - 1, 2);
+}
+
+// Ограничивающая функция , < 2
+double boundRozenbrokFunc(Point p) {
+    return p.x * p.x + p.y * p.y;
+}
 
 //double f(Point p) {
 //    return 4 * pow(p.x - 5, 2) + (p.y - 6);
@@ -29,13 +34,26 @@ double bilFunc(Point p) {
 namespace Barr {
     struct Settings {
         Point pBegin;
-        double rk, C, eps, bound
-    };
+        double rk, C, eps;
+        double bound;
+        bool isLeft;
+        std::string fileName;
 
-    const Point pBegin(-10.0f, -10.0f);
-    double rk = 10.0f, C = 2.0f, eps = 1e-2, bound = 1.0f;
-    bool isLeft = true;
-    const char *fileName = "barrier_result.txt";
+        Settings(Point pBegin, double eps, double rk, double C, double bound, bool isLeft, std::string fileName):
+            pBegin(pBegin), eps(eps), rk(rk), C(C), bound(bound), isLeft(isLeft), fileName(fileName) {}
+    } rozenbrokSettings(Point(-5.0f,5.0f), 1e-2, 10.0f, 2.0f, 2.0f, true, "barrier_rozenbrok.txt");
+
+    void rozenbrokFuncOpt(BarrierFunctionMethod &barrierFunctionMethod) {
+        barrierFunctionMethod.setPBegin(rozenbrokSettings.pBegin);
+        barrierFunctionMethod.setEps(rozenbrokSettings.eps);
+        barrierFunctionMethod.setRk(rozenbrokSettings.rk);
+        barrierFunctionMethod.setC(rozenbrokSettings.C);
+        barrierFunctionMethod.setBound(rozenbrokSettings.bound);
+        barrierFunctionMethod.setIsLeft(rozenbrokSettings.isLeft);
+
+        barrierFunctionMethod.setFunc(rozenbrokFunc);
+        barrierFunctionMethod.setBoundFunc(boundRozenbrokFunc);
+    }
 }
 
 namespace Grad {
@@ -47,7 +65,8 @@ namespace Grad {
         Settings(Point pBegin, double eps, std::string fileName): pBegin(pBegin), eps(eps), fileName(fileName) {}
     }
     sphereSettings(Point(-81245.43f, 0.001f), 1e-3, "gradient_sphere.txt"),
-    bilSettings(Point(3.5, 1.0f), 1e-3, "gradient_bil.txt")    ;
+    bilSettings(Point(3.5, 1.0f), 1e-3, "gradient_bil.txt"),
+    rozenbrokSettings(Point(-1.5f, 1.5f), 1e-3, "gradient_rozenbrok.txt");
 
     void sphereFuncOpt(GradientMethod &gradientMethod) {
         gradientMethod.setEps(sphereSettings.eps);
@@ -61,6 +80,14 @@ namespace Grad {
         gradientMethod.setEps(bilSettings.eps);
         gradientMethod.setPBegin(bilSettings.pBegin);
         gradientMethod.setFunc(bilFunc);
+
+        gradientMethod.solve();
+    }
+
+    void rozenbrokFuncOpt(GradientMethod &gradientMethod) {
+        gradientMethod.setEps(rozenbrokSettings.eps);
+        gradientMethod.setPBegin(rozenbrokSettings.pBegin);
+        gradientMethod.setFunc(rozenbrokFunc);
 
         gradientMethod.solve();
     }
@@ -108,36 +135,59 @@ int main() {
 
     // Инициализация параметров gnuplot
     Gnuplot plotGradient;
-    plotGradient.setTitle("Gradient method");
+    plotGradient.setTitle("Barrier method");
     plotGradient.setxLabel("x");
     plotGradient.setyLabel("y");
     plotGradient.setGrid(true);
     plotGradient.setLineStyle(1, Color::GREEN, 1, 1.5);
     plotGradient.setLineStyle(2, Color::RED, 1, 1.5, 2, 1.0);
+    plotGradient.setLineStyle(3, Color::BLUE, 1, 1.5);
+
+    std::cout << rozenbrokFunc(Point(1.0f, 1.0f)) << std::endl;
 
 //    // Градиентный метод для функции сферы
 //    Grad::sphereFuncOpt(gradientMethod);
 //    printMethodResultToTerminal(gradientMethod, "Gradient", "z = x * x + y * y", "", true);
 //    printMethodResultToFile(gradientMethod, Grad::sphereSettings.fileName);
 //    gradientMethod.reset();
-////    plotGradient.setxRange(Grad::sphereSettings.pBegin.x + 5, -Grad::sphereSettings.pBegin.x - 5);
-////    plotGradient.setyRange(Grad::sphereSettings.pBegin.y + 5, -Grad::sphereSettings.pBegin.y - 5);
+//
 //    plotGradient.setxRange(Grad::sphereSettings.pBegin.x, -Grad::sphereSettings.pBegin.x);
 //    plotGradient.setyRange(Grad::sphereSettings.pBegin.y, -Grad::sphereSettings.pBegin.y);
 //    plotGradient("splot x * x + y * y with lines linestyle 1, 'gradient_sphere.txt' with linespoints linestyle 2");
+//
+//
+//    // Градиентный метод для функции Била
+//    Grad::bilFuncOpt(gradientMethod);
+//    printMethodResultToTerminal(gradientMethod, "Gradient", "Bill Function", "", true);
+//    printMethodResultToFile(gradientMethod, Grad::bilSettings.fileName);
+//
+//    plotGradient.setxRange(Grad::bilSettings.pBegin.x, -Grad::bilSettings.pBegin.x);
+//    plotGradient.setyRange(Grad::bilSettings.pBegin.y, -Grad::bilSettings.pBegin.y);
+//    plotGradient("splot (1.5-x+x*y)**2+(2.25-x+x*y*y)**2+(2.625-x+x*y*y*y)**2 with lines linestyle 1, 'gradient_bil.txt' with linespoints linestyle 2");
+
+    // Барьерный метод для функции Розенброка
+    Grad::rozenbrokFuncOpt(gradientMethod);
+    printMethodResultToTerminal(gradientMethod, "Barrier", "Rozenbrok Function", "", true);
+    // printMethodResultToFile(gradientMethod, Grad::rozenbrokSettings.fileName);
+
+    plotGradient.setxRange(Grad::rozenbrokSettings.pBegin.x, -Grad::rozenbrokSettings.pBegin.x);
+    plotGradient.setyRange(Grad::rozenbrokSettings.pBegin.y, -Grad::rozenbrokSettings.pBegin.y);
+    plotGradient("splot (1-x)**2+100*(y-x*x)**2 with lines linestyle 1, 'gradient_rozenbrok.txt' with linespoints linestyle 2, x*x+y*y-2 with lines linestyle 3");
+    //plotGradient("splot (1-x)**2+100*(y-x*x)**2 with lines linestyle 1");
 
 
-    // Градиентный метод для функции Била
-    Grad::bilFuncOpt(gradientMethod);
-    printMethodResultToTerminal(gradientMethod, "Gradient", "Bill Function", "", true);
-    printMethodResultToFile(gradientMethod, Grad::bilSettings.fileName);
+//    // Метод барьерных функций
+//    BarrierFunctionMethod barrierFunctionMethod;
+//    plotGradient.setTitle("BarrierFunctionMethod");
+//
+//    // Метод барьерных функций для функции Розенброка
+//    plotGradient.setxRange(Barr::rozenbrokSettings.pBegin.x, -Barr::rozenbrokSettings.pBegin.x);
+//    plotGradient.setyRange(Barr::rozenbrokSettings.pBegin.y, -Barr::rozenbrokSettings.pBegin.y);
+//
+//    plotGradient("splot x**2 + y**2 - 2 with lines linestyle 1");
 
 
-    plotGradient.setxRange(Grad::bilSettings.pBegin.x, -Grad::bilSettings.pBegin.x);
-    plotGradient.setyRange(Grad::bilSettings.pBegin.y, -Grad::bilSettings.pBegin.y);
 
-
-    plotGradient("splot (1.5-x+x*y)**2+(2.25-x+x*y*y)**2+(2.625-x+x*y*y*y)**2 with lines linestyle 1, 'gradient_bil.txt' with linespoints linestyle 2");
 
 //    auto *barrierFunctionMethod = new BarrierFunctionMethod(Barr::xBegin, Barr::rk, Barr::eps, Barr::C, f, Barr::bound, Barr::isLeft);
 //    barrierFunctionMethod->solve();
